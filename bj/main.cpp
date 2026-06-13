@@ -10,7 +10,6 @@ constexpr int BLACKJACK = 21;
 
 std::random_device rd;
 
-
 const std::string BLACKJACK_ASCII = R"( 
  _     _            _    _            _    
 | |   | |          | |  (_)          | |   
@@ -20,30 +19,6 @@ const std::string BLACKJACK_ASCII = R"(
 |_.__/|_|\__,_|\___|_|\_\ |\__,_|\___|_|\_\
                        _/ |                
                       |__/)";
-
-// raw string literal?
-
-//std::string _CLUBS = "Clubs";
-//std::string _DIAMONDS = "Diamonds";
-//std::string _HEARTS = "Hearts";
-//std::string _SPADES = "Spades";
-//
-//std::string _KING = "King";
-//std::string _QUEEN = "Queen";
-//std::string _JACK = "Jack";
-//std::string _ACE = "Ace";
-
-
-// _     _            _    _            _    
-//| |   | |          | |  (_)          | |   
-//| |__ | | __ _  ___| | ___  __ _  ___| | __
-//| '_ \| |/ _` |/ __| |/ / |/ _` |/ __| |/ /
-//| |_) | | (_| | (__|   <| | (_| | (__|   < 
-//|_.__/|_|\__,_|\___|_|\_\ |\__,_|\___|_|\_\
-//                       _/ |                
-//                      |__/                 
-
-
 
 class Card {
 public:
@@ -338,10 +313,6 @@ private:
 };
 
 int main() {
-
-	
-
-
 	std::cout << "\n" << BLACKJACK_ASCII << "\n";
 
 	BlackJack blackjack;
