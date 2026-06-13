@@ -170,13 +170,16 @@ public:
 
 	int ace_logic() {
 		int ace_count = 0;
+
 		for (auto& card : this->hand) {
 			if (card.get_value() == Card::ACE) {
 				++ace_count;
 			}
 		}
-		if (ace_count > 0 && this->score >= 22) {
-			this->score -= 10;
+		
+		while (ace_count > 0 && this->score > 21) {
+			this->score -= 10; // check the score
+			--ace_count; // decrement the ace count exit loop
 		}
 
 		return this->score;
@@ -184,7 +187,7 @@ public:
 	}
 
 private:	
-
+	int ace_count;
 	int score = 0; // might be better of being local? perhaps not...
 
 };
