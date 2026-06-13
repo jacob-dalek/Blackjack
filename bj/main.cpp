@@ -9,34 +9,36 @@ constexpr char NO = 'n';
 constexpr int BLACKJACK = 21;
 constexpr int STAND = 17;
 
+//std::string _CLUBS = "Clubs";
+//std::string _DIAMONDS = "Diamonds";
+//std::string _HEARTS = "Hearts";
+//std::string _SPADES = "Spades";
+//
+//std::string _KING = "King";
+//std::string _QUEEN = "Queen";
+//std::string _JACK = "Jack";
+//std::string _ACE = "Ace";
+
+
+// _     _            _    _            _    
+//| |   | |          | |  (_)          | |   
+//| |__ | | __ _  ___| | ___  __ _  ___| | __
+//| '_ \| |/ _` |/ __| |/ / |/ _` |/ __| |/ /
+//| |_) | | (_| | (__|   <| | (_| | (__|   < 
+//|_.__/|_|\__,_|\___|_|\_\ |\__,_|\___|_|\_\
+//                       _/ |                
+//                      |__/                 
+
+
 
 class Card {
 public:
-	Card(std::string face, int value) :
-		face{ face }, value{value}{}
 
-	int get_value() const { return this->value; }
-
-	friend std::ostream& operator << (std::ostream& os, const Card& card) {
-		os << card.face << " " << card.value;
-		return os;
-	};
-
-
-private:
-	std::string face;
-	int value;
-
-};
-
-class Deck {
-public:
-
-	/*enum faces {
-		CLUBS='C',
-		DIAMONDS='D',
-		SPADES='S',
-		HEARTS='H'
+	enum faces {
+		CLUBS,
+		DIAMONDS,
+		SPADES,
+		HEARTS
 	};
 
 	enum values {
@@ -48,26 +50,59 @@ public:
 		SEVEN,
 		EIGHT,
 		NINE,
-		TEN,
-		KING=10,
-		QUEEN=10,
-		JACK=10,
-		ACE=1,
+		TEN=10,
+		KING = 10,
+		QUEEN = 10,
+		JACK = 10,
+		ACE = 11
 
-	};*/
 
-	Deck() = default;
 
-	std::vector<Card>& get_deck() { return this->deck; };
+	};
 
-	void init_deck() {
-		const std::vector<int> values{ 2,3,4,5,6,7,8,9,10 };
-		const std::vector<std::string> faces{ "Clubs", "Diamonds", "Spades", "Hearts" };
+	Card() = default;
+	Card(faces face, values value) : face{ face }, value{value} {};
 
-		for (auto& face : faces) {
-			for (auto& value : values) {
-				this->deck.push_back({ face, value });
+	values get_value() const { return this->value; }
 
+	friend std::ostream& operator << (std::ostream& os, Card& card) {
+		os << card.face << " " << card.value;
+		return os;
+	};
+
+
+private:
+
+	/*std::string match_face() {
+		switch (this->face) {
+		case Card::CLUBS:
+			return _CLUBS;
+		case Card::HEARTS:
+			return _HEARTS;
+		case Card::DIAMONDS:
+			return _DIAMONDS;
+		case Card::SPADES:
+			return _SPADES;
+		}
+	}*/
+
+
+	faces face;
+	values value;
+
+};
+
+class Deck {
+public:
+
+	
+
+	Deck() {
+		for (int face = Card::CLUBS; face <= Card::HEARTS; ++face) 
+		{
+			for (int value = Card::TWO; value <= Card::ACE; ++value)
+			{
+				this->deck.push_back(Card(static_cast<Card::faces>(face), static_cast<Card::values>(value)));
 			}
 		}
 
@@ -75,21 +110,16 @@ public:
 		std::mt19937 g{ rd() };
 
 		std::shuffle(this->deck.begin(), this->deck.end(), g);
+	
+	};
 
-	}
+	std::vector<Card>& get_deck() { return this->deck; };
 
 	void print_deck() {
 		for (Card& card : deck) {
 			std::cout << card << "\n";
 		}
 	}
-
-	/*void test() {
-		for (auto face = CLUBS; face != HEARTS; ++face) {
-			std::cout << face;
-		}
-	}*/
-
 	Card give_card() {
 		Card card = this->deck.front(); // not a fan of the !DNRY
 		this->deck.erase(this->deck.begin());
@@ -123,6 +153,8 @@ public:
 			this->score += card.get_value();
 		}
 
+		this->ace_logic();
+
 		return this->score;
 	}
 
@@ -136,9 +168,24 @@ public:
 		std::cout << "Your Score is: " << this->get_score() << "\n";
 	}
 
+	int ace_logic() {
+		int ace_count = 0;
+		for (auto& card : this->hand) {
+			if (card.get_value() == Card::ACE) {
+				++ace_count;
+			}
+		}
+		if (ace_count > 0 && this->score >= 22) {
+			this->score -= 10;
+		}
+
+		return this->score;
+
+	}
+
 private:	
 
-	int score = 0;
+	int score = 0; // might be better of being local? perhaps not...
 
 };
 
@@ -201,15 +248,13 @@ public:
 
 private:
 
-	bool hit_chance[5] = { true, true, true, true, false };
+	//bool hit_chance[5] = { true, true, true, true, false };
 
 };
 
 class BlackJack {
 public:
-	BlackJack() {
-		deck.init_deck();
-	};
+	BlackJack() = default;
 
 	Deck deck;
 
@@ -224,8 +269,9 @@ public:
 		this->deal_cards();
 		this->player.print_hand();
 
-		while (this->player.hit() && this->player.get_score() <= BLACKJACK) {
+		while (this->player.hit()) {
 			this->player.push(this->deck.give_card());
+			//this->player.ace_logic();
 			this->player.print_hand();
 		}
 
@@ -245,27 +291,29 @@ private:
 		int dealer_score = this->dealer.get_score();
 		int player_score = this->player.get_score();
 
-		if (player_score == BLACKJACK) {
-			std::cout << "Blackjack\n";
-		}
-
 		if (dealer_score == BLACKJACK) {
 			std::cout << "Dealer Blackjack\n";
 		}
 
-		else if (player_score > BLACKJACK && dealer_score > BLACKJACK || player_score == dealer_score) {
-			std::cout << "DRAW\n";
-			//return;
-		}
-		else if (player_score > BLACKJACK || player_score < dealer_score && dealer_score < BLACKJACK) {
-			std::cout << "Dealers wins\n";
+		if (dealer_score > player_score && dealer_score < BLACKJACK || player_score > BLACKJACK) {
+			std::cout << "Dealer Wins\n";
 		}
 
-		else if (dealer_score > BLACKJACK || dealer_score < player_score && player_score < BLACKJACK) {
-			std::cout << "You win\n";
+		if (player_score == BLACKJACK) {
+			std::cout << "Blackjack\n";
 		}
-		else
-			std::cout << "what scenerio even is this?";
+
+		if (player_score > dealer_score && player_score < BLACKJACK || dealer_score > BLACKJACK) {
+			std::cout << "You Win\n";
+		}
+
+		if (player_score == dealer_score || player_score > BLACKJACK && dealer_score > BLACKJACK) {
+			std::cout << "Draw\n";
+		}
+
+
+		/*else
+			std::cout << "what scenerio even is this?";*/
 	}
 
 	Dealer dealer;
