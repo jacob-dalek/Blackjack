@@ -4,6 +4,8 @@
 #include <iostream>
 #include <random>
 
+//thank you reddit for the improvements
+
 constexpr char YES = 'y';
 constexpr char NO = 'n';
 constexpr int BLACKJACK = 21;
@@ -152,6 +154,9 @@ private:
 
 class Player: public Entity {
 public:
+
+	int score = 100; // should be private
+
 	bool hit() {
 
 		if (this->get_score() >= 21) {
@@ -171,7 +176,6 @@ public:
 			}
 		}
 	}
-
 };
 
 class Dealer: public Entity {
@@ -180,11 +184,8 @@ public:
 
 	void hit(Deck& deck) {
 		int score = this->get_score();
-		if (score == STAND) {
-			return;
-		}
-
-		if(score != BLACKJACK && score < 19 ) {
+		
+		while(score != BLACKJACK && score < 19 && score != STAND ) {
 			this->hand.push_back(deck.give_card());
 
 			std::uniform_int_distribution<int> distribution(1, 100); // may be better off as variables? 1 - 100 range
@@ -198,6 +199,7 @@ public:
 
 
 			}
+			score = this->get_score();
 		}
 
 		return;
@@ -233,13 +235,30 @@ public:
 		}
 	}
 
+	/*void game_loop() {
+		char prompt;
+		std::cout << "\nWould you like to play? y/n ";
+		while (std::cin >> prompt) {
+			switch (prompt) {
+			case YES: 
+				this->init_game();
+				break;
+			case NO:
+				break;
+			default:
+				std::cout << "\nWould you like to hit? y/n " << "\n";
+				continue;
+			}
+		}
+	}*/
+
 	void init_game() {
+
 		this->deal_cards();
 		this->player.print_hand();
 
 		while (this->player.hit()) {
 			this->player.push(this->deck.give_card());
-			//this->player.ace_logic();
 			this->player.print_hand();
 		}
 
@@ -273,6 +292,7 @@ private:
 
 		if (player_score > dealer_score && player_score < BLACKJACK || dealer_score > BLACKJACK) {
 			std::cout << "You Win\n";
+
 		}
 
 		if (player_score == dealer_score || player_score > BLACKJACK && dealer_score > BLACKJACK) {
@@ -291,8 +311,25 @@ private:
 int main() {
 	std::cout << "\n" << BLACKJACK_ASCII << "\n";
 
-	BlackJack blackjack;
-	blackjack.init_game();
+	char prompt;
+	std::cout << "\nWould you like to play? y/n ";
+	while (std::cin >> prompt) {
+		BlackJack blackjack;
+		switch (prompt) {
+		case YES: 
+			blackjack.init_game();
+			std::cout << "\nWould you like to play? y/n ";
+
+			break;
+		case NO:
+			return -1;
+		default:
+			std::cout << "\nWould you like to play? y/n " << "\n";
+			break;
+		}
+	}
+
+	
 	
 	return 0;
 }
