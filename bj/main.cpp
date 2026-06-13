@@ -235,23 +235,6 @@ public:
 		}
 	}
 
-	/*void game_loop() {
-		char prompt;
-		std::cout << "\nWould you like to play? y/n ";
-		while (std::cin >> prompt) {
-			switch (prompt) {
-			case YES: 
-				this->init_game();
-				break;
-			case NO:
-				break;
-			default:
-				std::cout << "\nWould you like to hit? y/n " << "\n";
-				continue;
-			}
-		}
-	}*/
-
 	void init_game() {
 
 		this->deal_cards();
