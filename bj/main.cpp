@@ -7,7 +7,21 @@
 constexpr char YES = 'y';
 constexpr char NO = 'n';
 constexpr int BLACKJACK = 21;
-constexpr int STAND = 17;
+
+std::random_device rd;
+
+
+const std::string BLACKJACK_ASCII = R"( 
+ _     _            _    _            _    
+| |   | |          | |  (_)          | |   
+| |__ | | __ _  ___| | ___  __ _  ___| | __
+| '_ \| |/ _` |/ __| |/ / |/ _` |/ __| |/ /
+| |_) | | (_| | (__|   <| | (_| | (__|   < 
+|_.__/|_|\__,_|\___|_|\_\ |\__,_|\___|_|\_\
+                       _/ |                
+                      |__/)";
+
+// raw string literal?
 
 //std::string _CLUBS = "Clubs";
 //std::string _DIAMONDS = "Diamonds";
@@ -33,7 +47,6 @@ constexpr int STAND = 17;
 
 class Card {
 public:
-
 	enum faces {
 		CLUBS,
 		DIAMONDS,
@@ -50,7 +63,7 @@ public:
 		SEVEN,
 		EIGHT,
 		NINE,
-		TEN=10,
+		TEN = 10,
 		KING = 10,
 		QUEEN = 10,
 		JACK = 10,
@@ -59,54 +72,49 @@ public:
 
 
 	};
-
 	Card() = default;
 	Card(faces face, values value) : face{ face }, value{value} {};
 
 	values get_value() const { return this->value; }
 
 	friend std::ostream& operator << (std::ostream& os, Card& card) {
-		os << card.face << " " << card.value;
+		os << card.face_to_string(card.face) << " " << card.value;
 		return os;
 	};
 
+	
 
 private:
 
-	/*std::string match_face() {
-		switch (this->face) {
-		case Card::CLUBS:
-			return _CLUBS;
-		case Card::HEARTS:
-			return _HEARTS;
-		case Card::DIAMONDS:
-			return _DIAMONDS;
-		case Card::SPADES:
-			return _SPADES;
-		}
-	}*/
+	std::string face_to_string(faces face) { // I have seperation concerns will need start using source files.
+			switch (face) {
+			case Card::CLUBS:
+				return "Clubs";
+			case Card::HEARTS:
+				return "Hearts";
+			case Card::DIAMONDS:
+				return "Diamonds";
+			case Card::SPADES:
+				return "Spades";
+			}
+	}
 
-
-	faces face;
+	Card::faces face;
 	values value;
 
 };
 
 class Deck {
 public:
-
-	
-
 	Deck() {
-		for (int face = Card::CLUBS; face <= Card::HEARTS; ++face) 
+		for (int face = Card::Card::CLUBS; face <= Card::Card::HEARTS; ++face) 
 		{
 			for (int value = Card::TWO; value <= Card::ACE; ++value)
 			{
-				this->deck.push_back(Card(static_cast<Card::faces>(face), static_cast<Card::values>(value)));
+				this->deck.push_back(Card(static_cast<Card::Card::Card::faces>(face), static_cast<Card::values>(value)));
 			}
 		}
 
-		std::random_device rd;
 		std::mt19937 g{ rd() };
 
 		std::shuffle(this->deck.begin(), this->deck.end(), g);
@@ -126,7 +134,7 @@ public:
 		return card;
 	}
 
-	int size() const { return this->deck.size(); };
+	size_t size() const { return this->deck.size(); };
 
 private:
 
@@ -136,8 +144,6 @@ private:
 
 class Entity {
 public:
-
-
 	std::vector<Card> hand;
 
 	void push(Card card) {
@@ -170,7 +176,6 @@ public:
 
 	int ace_logic() {
 		int ace_count = 0;
-
 		for (auto& card : this->hand) {
 			if (card.get_value() == Card::ACE) {
 				++ace_count;
@@ -180,6 +185,8 @@ public:
 		while (ace_count > 0 && this->score > 21) {
 			this->score -= 10; // check the score
 			--ace_count; // decrement the ace count exit loop
+
+			//https://stackoverflow.com/questions/46752965/c-blackjack-stuck-trying-to-program-ace thank you ?
 		}
 
 		return this->score;
@@ -187,7 +194,6 @@ public:
 	}
 
 private:	
-	int ace_count;
 	int score = 0; // might be better of being local? perhaps not...
 
 };
@@ -219,19 +225,29 @@ public:
 
 class Dealer: public Entity {
 public:
+	
 
-	void hit(Card card) {
+	void hit(Deck* deck) {
 		int score = this->get_score();
-		
 		if (score == STAND) {
 			return;
 		}
 
+		if(score != BLACKJACK && score < 19 ) {
+			this->hand.push_back(deck->give_card());
 
-		if (score != BLACKJACK && score < STAND) { // bool array to choose from may be more optimal>
-			this->hand.push_back(card);
-			return;
+			std::uniform_int_distribution<int> distribution(1, 100); // may be better off as variables? 1 - 100 range
+			std::mt19937 engine(rd()); // Mersenne twister MT19937 no idea?
+
+			int value = distribution(engine); // engine distributes numbers and selects one
+			if (value < Dealer::DEALER_THRESHOLD && score > Dealer::STAND && score != BLACKJACK) { 
+				this->hand.push_back(deck->give_card());
+
+
+			}
 		}
+
+		return;
 	}
 
 	void print_hand() {
@@ -248,11 +264,9 @@ public:
 		std::cout << "\nDealer Card: " << this->hand.front() << "\n";
 	}
 
-
 private:
-
-	//bool hit_chance[5] = { true, true, true, true, false };
-
+	const static int STAND = 17;
+	const static int DEALER_THRESHOLD = 90;
 };
 
 class BlackJack {
@@ -279,7 +293,7 @@ public:
 		}
 
 
-		this->dealer.hit(this->deck.give_card());
+		this->dealer.hit(&this->deck);
 		this->player.print_hand();
 		this->dealer.print_hand();
 		this->win_logic();
@@ -321,17 +335,17 @@ private:
 
 	Dealer dealer;
 	Player player;
-
-
 };
-
 
 int main() {
 
-	BlackJack blackjack;
-	blackjack.init_game();
 	
 
+
+	std::cout << "\n" << BLACKJACK_ASCII << "\n";
+
+	BlackJack blackjack;
+	blackjack.init_game();
 	
 	return 0;
 }
