@@ -11,11 +11,6 @@ constexpr int BLACKJACK = 21;
 constexpr int STAND = 17;
 constexpr int DEALER_THRESHOLD = 90;
 
-const std::string CLUBS = "Clubs";
-const std::string DIAMONDS = "Diamonds";
-const std::string HEARTS = "Hearts";
-const std::string SPADES = "Spades";
-
 
 const std::string BLACKJACK_ASCII = R"( 
  _     _            _    _            _    
@@ -29,9 +24,15 @@ const std::string BLACKJACK_ASCII = R"(
 
 class Card {
 public:
+	enum faces {
+		CLUBS,
+		DIAMONDS,
+		SPADES,
+		HEARTS
+	};
 
 	Card() = default;
-	Card(std::string suit, int value) : suit{ suit }, value{value} {};
+	Card(faces face, int value) : face{ face }, value{value} {};
 
 
 	int get_value() const {
@@ -39,14 +40,28 @@ public:
 	}
 
 	friend std::ostream& operator << (std::ostream& os, Card& card) {
-		os << card.suit << " " << card.value;
+		os << card.face_to_string(card.face) << " " << card.value;
 		return os;
 	};
 
 	
 
 private:
-	std::string suit;
+
+	const std::string face_to_string(const faces& face) { // I have seperation concerns will need start using source files.
+			switch (face) {
+			case Card::CLUBS:
+				return "Clubs";
+			case Card::HEARTS:
+				return "Hearts";
+			case Card::DIAMONDS:
+				return "Diamonds";
+			case Card::SPADES:
+				return "Spades";
+			}
+	}
+
+	Card::faces face;
 	int value;
 
 
@@ -57,12 +72,12 @@ public:
 	Deck() {
 
 
-		const int val[13] = {2,3,4,5,6,7,8,9,10,10,10,10,11};
-		const std::string suits[4] = { DIAMONDS, SPADES, HEARTS, CLUBS };
+		const static int val[13] = {2,3,4,5,6,7,8,9,10,10,10,10,11};
 
-		for (const std::string suit: suits) {
-			for (const int &value : val) {
-				this->deck.push_back(Card(suit, value));
+		for (int face = Card::CLUBS; face <= Card::HEARTS; ++face) 
+		{
+			for (int value : val) {
+				this->deck.push_back(Card(static_cast<Card::Card::Card::faces>(face), value));
 			}
 		}
 		std::random_device rd;
@@ -162,8 +177,7 @@ public:
 		std::cout << "\nWould you like to hit? y/n ";
 		while (std::cin >> prompt) {
 			switch (prompt) {
-			case YES: 
-				return true;
+			case YES: return true;
 			case NO: return false;
 			default:
 				std::cout << "\nWould you like to hit? y/n " << "\n";
