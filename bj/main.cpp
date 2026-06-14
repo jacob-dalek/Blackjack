@@ -6,20 +6,20 @@
 
 //thank you reddit for the improvements
 
-constexpr char YES = 'y';
-constexpr char NO = 'n';
-constexpr int BLACKJACK = 21;
+constexpr char yes = 'y';
+constexpr char no = 'n';
+constexpr int blackjack = 21;
 
-constexpr int STAND = 17;
-constexpr int DEALER_THRESHOLD = 90;
+constexpr int stand = 17;
+constexpr int dealer_threshold = 90;
 
-const std::string CLUBS = "Clubs";
-const std::string DIAMONDS = "Diamonds";
-const std::string HEARTS = "Hearts";
-const std::string SPADES = "Spades";
+const std::string clubs = "clubs";
+const std::string diamonds = "diamonds";
+const std::string hearts = "hearts";
+const std::string spades = "spades";
 
 
-const std::string BLACKJACK_ASCII = R"( 
+const std::string blackjack_ascii = R"( 
  _     _            _    _            _    
 | |   | |          | |  (_)          | |   
 | |__ | | __ _  ___| | ___  __ _  ___| | __
@@ -45,13 +45,9 @@ public:
 		return os;
 	};
 
-	
-
 private:
 	std::string suit;
 	int value;
-
-
 };
 
 class Deck {
@@ -60,7 +56,7 @@ public:
 
 
 		const int val[13] = {2,3,4,5,6,7,8,9,10,10,10,10,11};
-		const std::string suits[4] = { DIAMONDS, SPADES, HEARTS, CLUBS };
+		const std::string suits[4] = { diamonds, spades, hearts, clubs };
 
 		for (const std::string suit: suits) {
 			for (const int &value : val) {
@@ -97,6 +93,10 @@ private:
 
 class Entity {
 public:
+	
+	Entity() = default;
+	Entity(std::string name) : name{name} {};
+
 	std::vector<Card> hand;
 
 	void push(const Card& card) {
@@ -104,10 +104,11 @@ public:
 	}
 
 	int get_score() {
+
 		this->score = 0;
-
+		
 		if (this->hand.empty()) return score;
-
+		
 		for (auto& card : this->hand) {
 			this->score += card.get_value();
 		}
@@ -117,20 +118,23 @@ public:
 		return this->score;
 	}
 
-	void print_hand() {
+	virtual void print_hand() {
 		std::cout << "\nYour Cards\n";
 
 		for (Card& card : hand) {
 			std::cout << card << "\n";
 		}
 
-		std::cout << "Your Score is: " << this->get_score() << "\n";
+		std::cout  <<  this->name << " Score is: " << this->get_score() << "\n";
+
+
+
 	}
+private:
 
-	
+	int score = 0; 
+	std::string name = "Player 1";
 
-private:	
-	int score = 0; // might be better of being local? perhaps not...
 	int ace_logic() {
 		int ace_count = 0;
 		for (auto& card : this->hand) {
@@ -155,9 +159,11 @@ private:
 class Player: public Entity {
 public:
 
-	int score = 100; // should be private
 
-	bool hit() {
+	Player() = default;
+	Player(std::string name) : Entity(name) {}; // cba to implement
+
+	bool is_hit() {
 
 		if (this->get_score() >= 21) {
 			return false;
@@ -167,14 +173,15 @@ public:
 		std::cout << "\nWould you like to hit? y/n ";
 		while (std::cin >> prompt) {
 			switch (prompt) {
-			case YES: 
+			case yes: 
 				return true;
-			case NO: return false;
+			case no: return false;
 			default:
 				std::cout << "\nWould you like to hit? y/n " << "\n";
 				continue;
 			}
 		}
+		return -1;
 	}
 };
 
@@ -185,7 +192,7 @@ public:
 	void hit(Deck& deck) {
 		int score = this->get_score();
 		
-		while(score != BLACKJACK && score < 19 && score != STAND ) {
+		while(score != blackjack && score < 19 && score != stand ) {
 			this->hand.push_back(deck.give_card());
 
 			std::uniform_int_distribution<int> distribution(1, 100); // may be better off as variables? 1 - 100 range
@@ -194,7 +201,7 @@ public:
 			std::mt19937 engine(rd()); // Mersenne twister MT19937 no idea?
 
 			int value = distribution(engine); // engine distributes numbers and selects one
-			if (value < DEALER_THRESHOLD && score > STAND && score != BLACKJACK) { 
+			if (value < dealer_threshold && score > stand && score != blackjack) { 
 				this->hand.push_back(deck.give_card());
 
 
@@ -205,7 +212,7 @@ public:
 		return;
 	}
 
-	void print_hand() {
+	void print_hand() override {
 
 		std::cout << "\nDealer Cards\n";
 		for (Card& card : hand) {
@@ -238,9 +245,10 @@ public:
 	void init_game() {
 
 		this->deal_cards();
+		this->dealer.reveal_card();
 		this->player.print_hand();
 
-		while (this->player.hit()) {
+		while (this->player.is_hit()) {
 			this->player.push(this->deck.give_card());
 			this->player.print_hand();
 		}
@@ -261,30 +269,27 @@ private:
 		int dealer_score = this->dealer.get_score();
 		int player_score = this->player.get_score();
 
-		if (dealer_score == BLACKJACK) {
+		if (dealer_score == blackjack) {
 			std::cout << "Dealer Blackjack\n";
 		}
 
-		if (dealer_score > player_score && dealer_score < BLACKJACK || player_score > BLACKJACK) {
+		if (dealer_score > player_score && dealer_score < blackjack || player_score > blackjack) {
 			std::cout << "Dealer Wins\n";
 		}
 
-		if (player_score == BLACKJACK) {
+		if (player_score == blackjack) {
 			std::cout << "Blackjack\n";
 		}
 
-		if (player_score > dealer_score && player_score < BLACKJACK || dealer_score > BLACKJACK) {
+		if (player_score > dealer_score && player_score < blackjack || dealer_score > blackjack) {
 			std::cout << "You Win\n";
 
 		}
 
-		if (player_score == dealer_score || player_score > BLACKJACK && dealer_score > BLACKJACK) {
+		if (player_score == dealer_score || player_score > blackjack && dealer_score > blackjack) {
 			std::cout << "Draw\n";
 		}
 
-
-		/*else
-			std::cout << "what scenerio even is this?";*/
 	}
 
 	Dealer dealer;
@@ -292,28 +297,25 @@ private:
 };
 
 int main() {
-	std::cout << "\n" << BLACKJACK_ASCII << "\n";
+	std::cout << "\n" << blackjack_ascii << "\n";
 
 	char prompt;
 	std::cout << "\nWould you like to play? y/n ";
 	while (std::cin >> prompt) {
 		BlackJack blackjack;
 		switch (prompt) {
-		case YES: 
+		case yes: 
 			blackjack.init_game();
 			std::cout << "\nWould you like to play? y/n ";
 
 			break;
-		case NO:
+		case no:
 			return -1;
 		default:
 			std::cout << "\nWould you like to play? y/n " << "\n";
 			break;
 		}
 	}
-
-	
-	
 	return 0;
 }
 
