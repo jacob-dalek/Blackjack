@@ -253,9 +253,16 @@ public:
 	void hit(Deck& deck, Player& p) {
 
 
+		while (p.hand_sum() == blackjack && this->score < blackjack && this->score != stand) {
+				this->add_card(deck);
+				if (this->score == blackjack)
+					return;
+		}
+
 
 		while(this->score != blackjack && this->score < dealer_hit && this->score != stand) {
 			this->add_card(deck);
+			
 			std::uniform_int_distribution<int> distribution(1, 100);
 			std::random_device rd;
 
