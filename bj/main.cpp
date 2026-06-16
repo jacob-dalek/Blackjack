@@ -88,7 +88,7 @@ private:
 	}
 
 	std::string enum_suit_to_string() const {
-		static std::array<std::string, 4> suit_to_string = { "Clubs", "Diamonds", "Spades", "Hearts" };
+		static std::array<std::string, 4> suit_to_string = { clubs, diamonds, spades, hearts };
 		return suit_to_string[std::to_underlying(this->suit)];
 	}
 
@@ -253,6 +253,8 @@ public:
 	void hit(Deck& deck, Player& p) {
 
 
+		// should make some conditions variables or functions
+
 		while (p.hand_sum() == blackjack && this->score < blackjack && this->score != stand) {
 				this->add_card(deck);
 				if (this->score == blackjack)
@@ -270,7 +272,7 @@ public:
 
 			int value = distribution(engine); 
 
-			if ((value < dealer_threshold && this->score < stand && this->score != blackjack) ) { // buggy score not working correctly 
+			if ((value < dealer_threshold && this->score < stand && this->score != blackjack) ) { // 
 				this->add_card(deck);
 			}
 
@@ -301,7 +303,6 @@ private:
 		Card card = deck.give_card();
 		this->push(card);
 		this->score += card.get_value();
-		//this->score += card.get_value();
 	}
 };
 
@@ -392,7 +393,7 @@ int main() {
 	std::cout << "\n" << blackjack_ascii << "\n";
 
 	char prompt;
-	std::cout << "\nWould you like to play? y/n ";
+	std::cout << "\nWould you like to play? y/n "; // change to do while after feedback
 	while (std::cin >> prompt) {
 		BlackJack blackjack;
 		switch (prompt) {
