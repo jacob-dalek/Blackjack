@@ -156,9 +156,6 @@ private:
 	}
 
 	std::array<Card, deck_size> deck;
-
-
-
 };
 
 class Entity {
@@ -253,11 +250,9 @@ public:
  
 class Dealer: public Entity {
 public:
-	void hit(Deck& deck) {
+	void hit(Deck& deck, Player& p) {
 
-		this->hand_sum();
-
-		while(this->score != blackjack && this->score < dealer_hit && this->score != stand ) {
+		while(this->score != blackjack && this->score < dealer_hit && this->score != stand || p.hand_sum() == blackjack ) {
 			this->add_card(deck);
 			std::uniform_int_distribution<int> distribution(1, 100);
 			std::random_device rd;
@@ -265,12 +260,9 @@ public:
 			std::mt19937 engine{ rd() }; // Mersenne twister MT19937
 
 			int value = distribution(engine); 
-			if (value < dealer_threshold && this->score > stand && this->score != blackjack) {
+			if (value > dealer_threshold && this->score > stand && this->score != blackjack) { // buggy score not working correctly 
 				this->add_card(deck);
-
-
 			}
-			this->hand_sum(); // feels repetitive
 
 		}
 		return;
@@ -282,7 +274,7 @@ public:
 			std::cout << card << "\n";
 		}
 
-		std::cout << "\nDealer Score: " << this->hand_sum() << "\n";
+		std::cout << "Dealer Score: " << this->hand_sum() << "\n";
 
 	}
 
@@ -295,10 +287,10 @@ public:
 	}
 
 private:
-
 	void add_card(Deck& deck) {
 		Card card = deck.give_card();
 		this->push(card);
+		this->score += card.get_value();
 		//this->score += card.get_value();
 	}
 };
@@ -318,48 +310,64 @@ public:
 	}
 
 	void init_game() {
-
 		this->deal_cards();
+		this->player_logic();
+		this->dealer_logic(this->player);
+		this->win_logic();
+		this->reset_hand();
+	}
+
+private:
+
+	bool is_blackjack(Entity& e) {
+		return e.hand_sum() == blackjack ? true : false;
+	}
+	bool is_bust(Entity& e) {
+		return e.hand_sum() > blackjack ? true : false;
+	}
+
+	void dealer_logic(Player& player) {
+		this->dealer.hand_sum();
+		this->dealer.hit(this->deck, player);
+		this->dealer.print_hand();
+	}
+	void player_logic() {
 		this->player.print_hand();
 		while (this->player.is_hit()) {
 			this->dealer.deal_card(this->deck, this->player);
 			this->player.print_hand();
-
 		}
-		this->dealer.hit(this->deck);
-		this->dealer.print_hand();
-
-
-
-	/*	this->player.hand.clear();
-		this->dealer.hand.clear();*/
-
 	}
 
-private:
-	/*void win_logic() const {
+	void win_logic() {
+
+		int dealer_score = this->dealer.hand_sum();
+		int player_score = this->player.hand_sum();
 
 		std::cout << "\n";
 
-		int dealer_score = this->dealer.score;
-		int player_score = this->player.score;
-
-
-		if (dealer_score > player_score && dealer_score < blackjack || player_score > blackjack) {
-			std::cout << "Dealer Wins\n";
-		}
-
-
-		if (player_score > dealer_score && player_score < blackjack || dealer_score > blackjack) {
-			std::cout << "You Win\n";
-
-		}
-
-		if (player_score == dealer_score || player_score > blackjack && dealer_score > blackjack) {
+		if (is_bust(this->player) && is_bust(this->dealer) || player_score == dealer_score ) {
 			std::cout << "Draw\n";
 		}
 
-	}*/
+		if ((player_score > dealer_score && !is_bust(this->player) ) || is_bust(this->dealer) ) {
+			std::cout << "Player Wins\n";
+			if (is_blackjack(this->player)) {
+				std::cout << "Player blackjack\n";
+			}
+		}
+		if ((dealer_score > player_score && !is_bust(this->dealer) ) || is_bust(this->player) ) {
+			std::cout << "Dealer Wins\n";
+			if (is_blackjack(this->dealer)) {
+				std::cout << "Dealer Blackjack\n";
+			}
+		}
+	}
+
+	void reset_hand() {
+		this->player.reset_hand();
+		this->dealer.reset_hand();
+	}
 
 	Dealer dealer;
 	Player player;
