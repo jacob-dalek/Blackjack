@@ -16,9 +16,9 @@ constexpr int blackjack = 21;
 
 
 // the names are ambiguous tbf thank you
-constexpr int stand = 17;
-constexpr int dealer_threshold = 90; // this constant is used to determine if the dealer should hit based on random value selected from range 1, 100
-constexpr int dealer_hit = 19;
+constexpr int dealer_stand = 17; // used to determine if dealer stands on value
+constexpr int dealer_chance = 90; // this constant is used to determine if the dealer should hit based on random value selected from range 1, 100
+constexpr int dealer_hit = 19; // dealer will hit if dealer hand is less than 19
 constexpr int deck_size = 52;
 
 const std::string clubs = "clubs";
@@ -251,7 +251,7 @@ public:
 	}
 
 private:
-	size_t credit = 100; // crazy
+	size_t credit = 100; // is there any point in using this for credit eh no 8 bytes
 
 };
  
@@ -262,14 +262,14 @@ public:
 
 		// should make some conditions variables or functions
 
-		while (p.hand_sum() == blackjack && this->score < blackjack && this->score != stand) {
+		while (p.hand_sum() == blackjack && this->score < blackjack && this->score != dealer_stand) {
 				this->add_card(deck);
 				if (this->score == blackjack)
 					return;
 		}
 
 
-		while(this->score != blackjack && this->score < dealer_hit && this->score != stand) {
+		while(this->score != blackjack && this->score < dealer_hit && this->score != dealer_stand) {
 			this->add_card(deck);
 			
 			std::uniform_int_distribution<int> distribution(1, 100);
@@ -279,7 +279,7 @@ public:
 
 			int value = distribution(engine); 
 
-			if ((value < dealer_threshold && this->score < stand && this->score != blackjack) ) { // 
+			if ((value < dealer_chance && this->score < dealer_stand && this->score != blackjack) ) { // 
 				this->add_card(deck);
 			}
 
