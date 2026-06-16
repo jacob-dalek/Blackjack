@@ -98,8 +98,6 @@ class Deck {
 	using enum Card::suits;
 	using enum Card::values;
 public:
-
-
 	static constexpr std::array<Card::suits, 4> SUITS{ CLUBS, DIAMONDS, SPADES, HEARTS };
 
 	static constexpr std::array<Card::values, 13> VALUES{
@@ -121,10 +119,7 @@ public:
 			}
 		}
 
-		std::random_device rd;
-		std::mt19937 g{ rd() };
-
-		std::shuffle(this->deck.begin(), this->deck.end(), g);
+		this->shuffle_deck();
 
 	}
 ;
@@ -146,7 +141,20 @@ public:
 		return card;
 	}
 
+
+
 private:
+
+	void shuffle_deck() {
+		if (this->deck.empty())	return;
+
+
+		std::random_device rd;
+		std::mt19937 g{ rd() };
+
+		std::shuffle(this->deck.begin(), this->deck.end(), g);
+	}
+
 	std::array<Card, deck_size> deck;
 
 
@@ -159,21 +167,58 @@ public:
 	Entity() = default;
 	Entity(std::string name) : name{name} {};
 
-	int score = 0; // probably should not be public 
 	
-	std::vector<Card> hand;
 
 	void push(const Card& card) { this->hand.push_back(card);} // gonna need justification for emplace back > push
 
 	virtual void print_hand() {
-		std::cout << "\nYour Cards\n";
+		std::cout << "\n" << this->name << " Cards\n";
 
-		for (Card& card : hand) {
+		for (Card& card : this->hand) {
 			std::cout << card << "\n";
 		}
+		std::cout << this->name << " Score: " << this->hand_sum() << "\n";
+
 	}
 
+	int hand_sum() {
+		int total = 0; // total will be set to 0 every call to ensure correct total when iterating through hand
+		for (Card& card: this->hand){
+			total += card.get_value();
+		}
+		this->score = total;
+		
+		this->ace_logic();
+		
+		return this->score;
+	}
+
+	void reset_hand() {
+		this->hand.clear();
+	}
+
+protected:
+	std::vector<Card> hand; // derrived classes should be able to access within scope
+	int score = 0; 
+
 private:
+	void ace_logic() {
+
+		int ace_count = 0;
+		for (auto& card : this->hand) {
+			if (card.get_value() == 11) {
+				++ace_count;
+			}
+		}
+
+		while (ace_count > 0 && this->score > blackjack) {
+			this->score -= 10; // check the score
+			--ace_count; // decrement the ace count exit loop
+		}
+
+		return;
+	}
+
 	std::string name = "Player 1";
 };
 
@@ -210,7 +255,7 @@ class Dealer: public Entity {
 public:
 	void hit(Deck& deck) {
 
-
+		this->hand_sum();
 
 		while(this->score != blackjack && this->score < dealer_hit && this->score != stand ) {
 			this->add_card(deck);
@@ -220,16 +265,14 @@ public:
 			std::mt19937 engine{ rd() }; // Mersenne twister MT19937
 
 			int value = distribution(engine); 
-			if (value < dealer_threshold && this->score > stand && score != blackjack) { 
+			if (value < dealer_threshold && this->score > stand && this->score != blackjack) {
 				this->add_card(deck);
 
 
 			}
-			this->deck_sum();
+			this->hand_sum(); // feels repetitive
+
 		}
-
-
-
 		return;
 	}
 
@@ -238,10 +281,17 @@ public:
 		for (Card& card : hand) {
 			std::cout << card << "\n";
 		}
+
+		std::cout << "\nDealer Score: " << this->hand_sum() << "\n";
+
 	}
 
 	void reveal_card() {
 		std::cout << "\nDealer Card: " << this->hand.front() << "\n";
+	}
+
+	void deal_card(Deck& d, Entity& e) {
+		e.push(d.give_card());
 	}
 
 private:
@@ -251,23 +301,11 @@ private:
 		this->push(card);
 		//this->score += card.get_value();
 	}
-
-	void deck_sum() {
-
-		int total = 0;
-		for (auto& card: this->hand) {
-			total += card.get_value();
-		}
-		this->score = total;
-	}
-
 };
 
 class BlackJack {
 public:
 	BlackJack() = default;
-
-	Deck deck;
 
 	void deal_cards() {
 		for (int i = 0; i < 2; ++i) {
@@ -282,80 +320,24 @@ public:
 	void init_game() {
 
 		this->deal_cards();
-		this->player_logic(this->player);
+		this->player.print_hand();
 		while (this->player.is_hit()) {
-			this->player.push(this->deck.give_card());
-			this->player_logic(this->player);
+			this->dealer.deal_card(this->deck, this->player);
+			this->player.print_hand();
 
 		}
-		this->dealer_logic(this->dealer);
-		
+		this->dealer.hit(this->deck);
+		this->dealer.print_hand();
 
 
-		this->win_logic();
 
-		this->player.hand.clear();
-		this->dealer.hand.clear();
+	/*	this->player.hand.clear();
+		this->dealer.hand.clear();*/
 
 	}
 
 private:
-
-	void player_logic(Player& p) {
-		this->score(p);
-		p.print_hand();
-		this->get_entity_score(p);
-	}
-
-	void dealer_logic(Dealer& d) {
-		d.hit(this->deck);
-		this->score(d);
-		this->dealer.print_hand();
-		this->get_entity_score(d);
-
-	}
-
-
-
-	void get_entity_score(Entity& e) const  {
-		std::cout << e.score;
-	}
-
-	void ace_logic(Entity& e) {
-
-		int ace_count = 0;
-		for (auto& card : e.hand) {
-			if (card.get_value() == 11) {
-				++ace_count;
-			}
-		}
-
-		while (ace_count > 0 && e.score > blackjack) {
-			e.score -= 10; // check the score
-			--ace_count; // decrement the ace count exit loop
-		}
-		return;
-	}
-
-	void score(Entity& e) {
-
-		int score = 0; 
-
-		if (e.hand.empty()) return ;
-		
-		for (auto& card : e.hand) {
-			score += card.get_value();
-		}
-
-		e.score = score;
-
-		this->ace_logic(e);
-
-		return;
-
-	}
-
-	void win_logic() const {
+	/*void win_logic() const {
 
 		std::cout << "\n";
 
@@ -377,10 +359,11 @@ private:
 			std::cout << "Draw\n";
 		}
 
-	}
+	}*/
 
 	Dealer dealer;
 	Player player;
+	Deck deck;
 };
 
 int main() {
