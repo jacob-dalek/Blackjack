@@ -158,6 +158,7 @@ private:
 	std::array<Card, deck_size> deck;
 };
 
+
 class Entity {
 public:
 	
@@ -246,6 +247,10 @@ public:
 		}
 		return false;
 	}
+
+private:
+	size_t credit = 100; // crazy
+
 };
  
 class Dealer: public Entity {
@@ -393,22 +398,26 @@ int main() {
 	std::cout << "\n" << blackjack_ascii << "\n";
 
 	char prompt;
-	std::cout << "\nWould you like to play? y/n "; // change to do while after feedback
-	while (std::cin >> prompt) {
+	do {
 		BlackJack blackjack;
-		switch (prompt) {
-		case yes: 
-			blackjack.init_game();
-			std::cout << "\nWould you like to play? y/n ";
+		blackjack.init_game();
+		std::cout << "\nWould you like to play? y/n ";
+		std::cin >> prompt;
 
-			break;
+		switch (prompt) {
+			case yes: 
+				continue;
 		case no:
 			return -1;
 		default:
 			std::cout << "\nWould you like to play? y/n " << "\n";
 			break;
 		}
-	}
+		//std::cout << "\nWould you like to hit? y/n ";
+
+
+	} while (true); // repeat until wow 
+
 	return 0;
 }
 
