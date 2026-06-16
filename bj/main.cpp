@@ -252,7 +252,9 @@ class Dealer: public Entity {
 public:
 	void hit(Deck& deck, Player& p) {
 
-		while(this->score != blackjack && this->score < dealer_hit && this->score != stand || p.hand_sum() == blackjack ) {
+
+
+		while(this->score != blackjack && this->score < dealer_hit && this->score != stand) {
 			this->add_card(deck);
 			std::uniform_int_distribution<int> distribution(1, 100);
 			std::random_device rd;
@@ -260,7 +262,8 @@ public:
 			std::mt19937 engine{ rd() }; // Mersenne twister MT19937
 
 			int value = distribution(engine); 
-			if (value > dealer_threshold && this->score > stand && this->score != blackjack) { // buggy score not working correctly 
+
+			if ((value < dealer_threshold && this->score < stand && this->score != blackjack) ) { // buggy score not working correctly 
 				this->add_card(deck);
 			}
 
@@ -346,21 +349,25 @@ private:
 
 		std::cout << "\n";
 
-		if (is_bust(this->player) && is_bust(this->dealer) || player_score == dealer_score ) {
-			std::cout << "Draw\n";
+		if (is_blackjack(this->player)) {
+			std::cout << "Player blackjack\n";
 		}
 
-		if ((player_score > dealer_score && !is_bust(this->player) ) || is_bust(this->dealer) ) {
-			std::cout << "Player Wins\n";
-			if (is_blackjack(this->player)) {
-				std::cout << "Player blackjack\n";
-			}
+		if (is_blackjack(this->dealer)) {
+			std::cout << "Dealer Blackjack\n";
 		}
-		if ((dealer_score > player_score && !is_bust(this->dealer) ) || is_bust(this->player) ) {
+
+		if (is_bust(this->player) && is_bust(this->dealer) || player_score == dealer_score ) {
+			std::cout << "Draw\n";
+			return;
+		}
+
+		if (player_score > dealer_score && !is_bust(this->player) || is_bust(this->dealer) ) {
+			std::cout << "Player Wins\n";
+		}
+		if (dealer_score > player_score && !is_bust(this->dealer) || is_bust(this->player) ) {
 			std::cout << "Dealer Wins\n";
-			if (is_blackjack(this->dealer)) {
-				std::cout << "Dealer Blackjack\n";
-			}
+			
 		}
 	}
 
