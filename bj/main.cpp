@@ -14,8 +14,10 @@ constexpr char yes = 'y';
 constexpr char no = 'n';
 constexpr int blackjack = 21;
 
+
+// the names are ambiguous tbf thank you
 constexpr int stand = 17;
-constexpr int dealer_threshold = 90;
+constexpr int dealer_threshold = 90; // this constant is used to determine if the dealer should hit based on random value selected from range 1, 100
 constexpr int dealer_hit = 19;
 constexpr int deck_size = 52;
 
@@ -46,7 +48,7 @@ public:
 	} suit;
 
 	enum values {
-		TWO = 0,
+		TWO,
 		THREE,
 		FOUR,
 		FIVE,
